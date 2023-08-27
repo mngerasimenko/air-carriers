@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class App {
+public class AirCarriers {
 	public static final String DEFAULT_SOURCE_FILE_NAME = "tickets.json";
 	public static final String DEFAULT_ORIGINAL_CITY_NAME = "Владивосток";
 	public static final String DEFAULT_ARRIVAL_CITY_NAME = "Тель-Авив";
@@ -89,7 +89,7 @@ public class App {
 		return tickets.getTickets().stream()
 				.filter(t -> t.getOriginName().equals(originName)
 						&& t.getDestinationName().equals(destinationName))
-				.map(App::getFlightTime)
+				.map(AirCarriers::getFlightTime)
 				.min(Long::compareTo).orElseGet(null);
 	}
 
