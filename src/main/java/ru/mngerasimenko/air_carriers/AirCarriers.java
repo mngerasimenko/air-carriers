@@ -10,7 +10,9 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -25,12 +27,7 @@ public class AirCarriers {
 
 		String originCityName = getOriginCityName(args);
 		String destinationCityName = getArrivalCityName(args);
-		Long minTime = getMinimalTime(tickets, originCityName, destinationCityName);
-		if (minTime == null) {
-			System.out.println("Unable to find the right flight");
-			System.exit(1);
-		}
-
+		Map<String, Long> minTime = getMinimalTimeByCarriers(tickets, originCityName, destinationCityName);
 		showMinimalTime(minTime);
 
 		List<Integer> prices = getSortedPrices(tickets, originCityName, destinationCityName);
@@ -85,12 +82,24 @@ public class AirCarriers {
 		return tickets;
 	}
 
-	private static Long getMinimalTime(Tickets tickets, String originName, String destinationName) {
-		return tickets.getTickets().stream()
+	private static Map<String, Long> getMinimalTimeByCarriers(Tickets tickets, String originName, String destinationName) {
+		Map<String, List<Long>> flightTimeByCarriers = tickets.getTickets().stream()
 				.filter(t -> t.getOriginName().equals(originName)
 						&& t.getDestinationName().equals(destinationName))
-				.map(AirCarriers::getFlightTime)
-				.min(Long::compareTo).orElseGet(null);
+				.collect(Collectors.groupingBy(
+								Ticket::getCarrier,
+								Collectors.mapping(
+										AirCarriers::getFlightTime,
+										Collectors.toList())
+						)
+				);
+
+		Map<String, Long> minTimeByCarriers = new HashMap<>();
+		for (Map.Entry<String, List<Long>> pair : flightTimeByCarriers.entrySet()) {
+			minTimeByCarriers.put(pair.getKey(), pair.getValue().stream().min(Long::compareTo).get());
+		}
+
+		return minTimeByCarriers;
 	}
 
 	private static long getFlightTime(Ticket ticket) {
@@ -105,13 +114,19 @@ public class AirCarriers {
 		return arrivalMillis - departureMillis;
 	}
 
-	private static void showMinimalTime(Long minTime) {
-		long hours = TimeUnit.MILLISECONDS.toHours(minTime);
-		long minutes = TimeUnit.MILLISECONDS.toMinutes(minTime) - TimeUnit.HOURS.toMinutes(hours);
-		long seconds = TimeUnit.MILLISECONDS.toSeconds(minTime) - TimeUnit.HOURS.toSeconds(hours) - TimeUnit.MINUTES.toSeconds(minutes);
+	private static void showMinimalTime(Map<String, Long> minTime) {
+		System.out.println("Minimal time: ");
+		for (Map.Entry<String, Long> pair : minTime.entrySet()) {
+			System.out.print(pair.getKey() + ": ");
+			long hours = TimeUnit.MILLISECONDS.toHours(pair.getValue());
+			long minutes = TimeUnit.MILLISECONDS.toMinutes(pair.getValue()) -
+					TimeUnit.HOURS.toMinutes(hours);
+			long seconds = TimeUnit.MILLISECONDS.toSeconds(pair.getValue()) -
+					TimeUnit.HOURS.toSeconds(hours) -
+					TimeUnit.MINUTES.toSeconds(minutes);
 
-		System.out.print("Minimal time: ");
-		System.out.println(hours + "hours, " + minutes + " minutes, " + seconds + " seconds");
+			System.out.println(hours + "hours, " + minutes + " minutes, " + seconds + " seconds");
+		}
 	}
 
 	private static List<Integer> getSortedPrices(Tickets tickets, String originCityName, String destinationName) {
