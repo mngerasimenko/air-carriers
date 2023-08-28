@@ -40,6 +40,9 @@ public class AirCarriers {
 
 		double medianPrice = getMedianPrice(prices);
 		System.out.println("Median price: " + medianPrice);
+
+		System.out.println("The difference between the average price and the median: "
+				+ Math.abs(averagePrice - medianPrice));
 	}
 
 	private static String getSourceFileName(String[] args) {
