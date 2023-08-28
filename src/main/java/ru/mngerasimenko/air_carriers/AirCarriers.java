@@ -125,7 +125,7 @@ public class AirCarriers {
 					TimeUnit.HOURS.toSeconds(hours) -
 					TimeUnit.MINUTES.toSeconds(minutes);
 
-			System.out.println(hours + "hours, " + minutes + " minutes, " + seconds + " seconds");
+			System.out.println(hours + " hours, " + minutes + " minutes, " + seconds + " seconds");
 		}
 	}
 
